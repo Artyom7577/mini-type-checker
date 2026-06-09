@@ -219,6 +219,23 @@ download the ANTLR4 jar into `lib/`).
 
 `run.sh` exits `0` on success, `1` on (syntax or type) errors.
 
+### Web visualizer (optional GUI)
+
+For a visual demo there is a tiny built-in web UI — it uses **only the JDK's
+HTTP server** (no extra dependencies, no framework, no build step) and shows, for
+any program you type: the **tokens**, the **parse tree** (collapsible), and the
+**type-check result / errors** (click an error to jump to that line).
+
+```bash
+./serve.sh            # then open http://localhost:8000   (./serve.sh 9000 for another port)
+```
+
+It reuses the **same** type checker as the command line: both `Main` (CLI) and
+`WebServer` (UI) call `Analyzer.analyze(...)`, which runs the one `TypeChecker`.
+So there is no duplicated logic — a fix to a type rule updates both front ends at
+once. (`WebServer` adds a JSON endpoint `POST /api/check`; `web/index.html` is the
+page that renders the response.)
+
 ---
 
 ## 7. Sample programs (requirement #5)
@@ -305,16 +322,20 @@ Type checking FAILED with 3 type error(s).
 ```
 MiniTypeChecker/
 ├── README.md                 ← this file
-├── build.sh  run.sh  test.sh ← build / run / test
+├── build.sh  run.sh  test.sh ← build / run / test (command line)
+├── serve.sh                  ← launch the web visualizer (http://localhost:8000)
 ├── lib/                      ← antlr-4.13.2-complete.jar (downloaded by build.sh)
 ├── src/minitype/
 │   ├── MiniType.g4           ← ANTLR4 grammar (lexer + parser)
-│   ├── Main.java             ← driver (parse → check → report; --tree)
+│   ├── Analyzer.java         ← shared pipeline (lexer→parser→SDD) used by BOTH front ends
+│   ├── Main.java             ← CLI driver (parse → check → report; --tree)
+│   ├── WebServer.java        ← JDK HTTP server + JSON endpoint for the web UI
 │   ├── TypeChecker.java      ← the SDD: one visitor method per production
 │   ├── SymbolTable.java      ← scoped getType/addType + struct table
 │   ├── Diagnostics.java      ← error collection/reporting
 │   └── types/                ← Type, BaseType, ArrayType, PointerType,
 │                                FunctionType, RecordType, ErrorType
+├── web/index.html            ← the visualizer page (tokens, parse tree, errors)
 ├── examples/                 ← 10 sample programs (ok_* and err_*)
 ├── gen/                      ← ANTLR-generated parser (created by build.sh)
 └── out/                      ← compiled .class files (created by build.sh)

@@ -3,3 +3,6 @@
 /out/
 # the ANTLR jar is downloaded by build.sh on first run
 /lib/*.jar
+# IntelliJ IDEA editor files (machine-specific)
+/.idea/
+*.iml
