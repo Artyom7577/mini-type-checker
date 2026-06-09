@@ -1,22 +1,25 @@
 package minitype;
 
-import org.antlr.v4.runtime.*;
+import java.io.IOException;
+
+import org.antlr.v4.runtime.BaseErrorListener;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.Parser;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import java.io.IOException;
-
 /**
  * Main — the driver that runs the full course pipeline on a .mt source file:
- *
- *     source --(MiniTypeLexer)--> tokens --(MiniTypeParser)--> parse tree
- *            --(TypeChecker = SDD)--> type errors / success
- *
- * Usage:  java minitype.Main <file.mt> [--tree]
- *   --tree   also print the parse tree (handy for demos / the AST topic).
- *
- * Exit code: 0 if type checking succeeds, 1 if there are syntax or type errors,
- *            2 on usage error.
+ * <p>
+ * source --(MiniTypeLexer)--> tokens --(MiniTypeParser)--> parse tree --(TypeChecker = SDD)--> type errors / success
+ * <p>
+ * Usage:  java minitype.Main <file.mt> [--tree] --tree   also print the parse tree (handy for demos / the AST topic).
+ * <p>
+ * Exit code: 0 if type checking succeeds, 1 if there are syntax or type errors, 2 on usage error.
  */
 public final class Main {
 
@@ -37,8 +40,10 @@ public final class Main {
         // Count syntax errors ourselves so we can skip type checking if the
         // program does not even parse.
         SyntaxErrorCounter syntax = new SyntaxErrorCounter();
-        lexer.removeErrorListeners();  lexer.addErrorListener(syntax);
-        parser.removeErrorListeners(); parser.addErrorListener(syntax);
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(syntax);
+        parser.removeErrorListeners();
+        parser.addErrorListener(syntax);
 
         ParseTree tree;
         try {
@@ -75,7 +80,9 @@ public final class Main {
         // 3. Report.
         System.out.println("=== Type checking: " + path + " ===");
         if (diag.hasErrors()) {
-            for (String e : diag.all()) System.out.println(e);
+            for (String e : diag.all()) {
+                System.out.println(e);
+            }
             System.out.println("Type checking FAILED with " + diag.count() + " type error(s).");
             System.exit(1);
         }
@@ -83,21 +90,28 @@ public final class Main {
         System.exit(0);
     }
 
-    /** Pretty-print the parse tree: rule/label names for inner nodes, quoted text for leaves. */
+    /**
+     * Pretty-print the parse tree: rule/label names for inner nodes, quoted text for leaves.
+     */
     private static void printTree(ParseTree t, Parser parser, String indent) {
         String label = (t instanceof TerminalNode)
-                ? "'" + t.getText() + "'"
-                : t.getClass().getSimpleName().replace("Context", ""); // shows the # label, e.g. AddSub
+            ? "'" + t.getText() + "'"
+            : t.getClass().getSimpleName().replace("Context", ""); // shows the # label, e.g. AddSub
         System.out.println(indent + label);
-        for (int i = 0; i < t.getChildCount(); i++)
+        for (int i = 0; i < t.getChildCount(); i++) {
             printTree(t.getChild(i), parser, indent + "  ");
+        }
     }
 
-    /** Collects (and prints) ANTLR syntax errors. */
+    /**
+     * Collects (and prints) ANTLR syntax errors.
+     */
     static final class SyntaxErrorCounter extends BaseErrorListener {
         int count = 0;
-        @Override public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
-                                          int line, int charPositionInLine, String msg, RecognitionException e) {
+
+        @Override
+        public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
+                                int line, int charPositionInLine, String msg, RecognitionException e) {
             count++;
             System.err.println(line + ":" + (charPositionInLine + 1) + ": syntax error: " + msg);
         }

@@ -50,12 +50,12 @@ generators*.
 Applying the **same criteria** to this machine (which has a JDK but **no .NET /
 Mono**, so GPPG cannot run here):
 
-| Generator | Target language | Parser class | Verdict for this project |
-|-----------|-----------------|--------------|--------------------------|
-| GPPG      | C#              | LALR(1)      | the course's choice, but **no .NET/Mono installed** |
-| Bison     | C / C++ / Java  | LALR(1)      | not installed; raw C is error-prone for a student demo |
-| PLY       | Python          | LALR(1)      | zero-install, but a different language |
-| **ANTLR4**| **Java**/C#/…   | **ALL(\*)** (adaptive LL) | **JDK 21 already present**; auto parse-tree + **visitor** |
+| Generator  | Target language | Parser class              | Verdict for this project                                  |
+|------------|-----------------|---------------------------|-----------------------------------------------------------|
+| GPPG       | C#              | LALR(1)                   | the course's choice, but **no .NET/Mono installed**       |
+| Bison      | C / C++ / Java  | LALR(1)                   | not installed; raw C is error-prone for a student demo    |
+| PLY        | Python          | LALR(1)                   | zero-install, but a different language                    |
+| **ANTLR4** | **Java**/C#/…   | **ALL(\*)** (adaptive LL) | **JDK 21 already present**; auto parse-tree + **visitor** |
 
 **Honest note for the defense:** ANTLR4 is on the **LL / top-down** branch
 (its ALL(\*) algorithm), *not* the LALR branch the slides highlight. We chose it
@@ -147,14 +147,14 @@ it automatically. Casts target base types only (`(int)e`), which keeps `(int)x`
 
 `Type` (see `src/minitype/types/`) is the course's *type expression*:
 
-| Kind          | Class          | Written as            | Equality |
-|---------------|----------------|-----------------------|----------|
+| Kind          | Class          | Written as                  | Equality              |
+|---------------|----------------|-----------------------------|-----------------------|
 | base          | `BaseType`     | `int double char bool void` | identity (singletons) |
-| array         | `ArrayType`    | `Array(T)`            | structural |
-| pointer       | `PointerType`  | `Pointer(T)`          | structural |
-| function      | `FunctionType` | `(T1, T2) -> R`       | structural |
-| record/struct | `RecordType`   | `struct Name`         | **by-name** |
-| error         | `ErrorType`    | `type_error`          | — |
+| array         | `ArrayType`    | `Array(T)`                  | structural            |
+| pointer       | `PointerType`  | `Pointer(T)`                | structural            |
+| function      | `FunctionType` | `(T1, T2) -> R`             | structural            |
+| record/struct | `RecordType`   | `struct Name`               | **by-name**           |
+| error         | `ErrorType`    | `type_error`                | —                     |
 
 `Array`, `Pointer` and function types use **structural** equality (two types are
 equal iff they have the same shape). Records use **by-name** equality — matching
@@ -171,26 +171,26 @@ propagates: a rule whose operand is already `type_error` returns `type_error`
 **without** a new message, so there is no cascade. A `*` marks an extension
 beyond the verbatim course slides.
 
-| Construct | Rule (synthesized `.type`) |
-|---|---|
-| `T id;` / `T id[n];` / `T* id;` | `addType(id, T)` / `Array(T)` / `Pointer(T)`; redefinition → error |
-| `int`/`double`/`char`/`bool` literal | `int` / `double` / `char` / `bool` |
-| `id` | `getType(id)`; if undefined → error, `type_error` |
-| `E1 + E2`, `-`, `*`, `/` | operands same ∧ ∈ {int, double} → that type; else `type_error` |
-| `E1 % E2` | both `int` → `int`; else `type_error` |
-| `E1 == E2`, `!=` | same type ∧ ∈ {int, double, char, bool*, Pointer} → `bool` (not arrays/functions) |
-| `E1 < E2`, `<=`, `>`, `>=` * | same type ∧ ∈ {int, double, char} → `bool` |
-| `E1 && E2`, `\|\|`, `!E` * | operand(s) `bool` → `bool` |
-| `-E` * (unary minus) | `int`/`double` → same |
-| `E1[E2]` | `E1 : Array(t)` ∧ `E2 : int` → `t`; else `type_error` |
-| `*E` (deref) | `E : Pointer(t)` → `t`; else `type_error` |
-| `&E` (address-of) | `E` is lvalue ∧ not an array → `Pointer(E.type)`; else `type_error` |
-| `(int)E` / `(double)E` | scalar→scalar (int/double/char) → target; else `type_error` |
-| `f(a1,…,an)` | `f : (p1,…,pn) -> r` ∧ each `ai : pi` ∧ arity ok → `r`; else `type_error` |
-| `E.field` * | `E : struct` ∧ field exists → field type; else `type_error` |
-| `lvalue = E` | lvalue type == `E.type` → ok; else error |
-| `if (E) S`, `while (E) S` | `E : bool` ∧ body ok → ok; else error |
-| `return E;` | `E.type` == the function's return type → ok; else error |
+| Construct                            | Rule (synthesized `.type`)                                                        |
+|--------------------------------------|-----------------------------------------------------------------------------------|
+| `T id;` / `T id[n];` / `T* id;`      | `addType(id, T)` / `Array(T)` / `Pointer(T)`; redefinition → error                |
+| `int`/`double`/`char`/`bool` literal | `int` / `double` / `char` / `bool`                                                |
+| `id`                                 | `getType(id)`; if undefined → error, `type_error`                                 |
+| `E1 + E2`, `-`, `*`, `/`             | operands same ∧ ∈ {int, double} → that type; else `type_error`                    |
+| `E1 % E2`                            | both `int` → `int`; else `type_error`                                             |
+| `E1 == E2`, `!=`                     | same type ∧ ∈ {int, double, char, bool*, Pointer} → `bool` (not arrays/functions) |
+| `E1 < E2`, `<=`, `>`, `>=` *         | same type ∧ ∈ {int, double, char} → `bool`                                        |
+| `E1 && E2`, `\|\|`, `!E` *           | operand(s) `bool` → `bool`                                                        |
+| `-E` * (unary minus)                 | `int`/`double` → same                                                             |
+| `E1[E2]`                             | `E1 : Array(t)` ∧ `E2 : int` → `t`; else `type_error`                             |
+| `*E` (deref)                         | `E : Pointer(t)` → `t`; else `type_error`                                         |
+| `&E` (address-of)                    | `E` is lvalue ∧ not an array → `Pointer(E.type)`; else `type_error`               |
+| `(int)E` / `(double)E`               | scalar→scalar (int/double/char) → target; else `type_error`                       |
+| `f(a1,…,an)`                         | `f : (p1,…,pn) -> r` ∧ each `ai : pi` ∧ arity ok → `r`; else `type_error`         |
+| `E.field` *                          | `E : struct` ∧ field exists → field type; else `type_error`                       |
+| `lvalue = E`                         | lvalue type == `E.type` → ok; else error                                          |
+| `if (E) S`, `while (E) S`            | `E : bool` ∧ body ok → ok; else error                                             |
+| `return E;`                          | `E.type` == the function's return type → ok; else error                           |
 
 **Symbol table** (`SymbolTable.java`) = the course's `getType`/`addType`, with
 lexical scopes (global / function / block) and a separate table of named
@@ -227,23 +227,23 @@ download the ANTLR4 jar into `lib/`).
 
 **Type-check successfully (`ok_*`):**
 
-| File | Demonstrates |
-|------|--------------|
-| `ok_arithmetic.mt`   | int/double arithmetic, `%`, explicit casts |
-| `ok_bool_control.mt` | bool, comparisons, `&&`/`!`, `if`/`while` |
-| `ok_arrays.mt`       | array declaration + indexing `Array(int)` |
-| `ok_pointers.mt`     | `&`, `*`, pointer-to-pointer |
+| File                 | Demonstrates                                  |
+|----------------------|-----------------------------------------------|
+| `ok_arithmetic.mt`   | int/double arithmetic, `%`, explicit casts    |
+| `ok_bool_control.mt` | bool, comparisons, `&&`/`!`, `if`/`while`     |
+| `ok_arrays.mt`       | array declaration + indexing `Array(int)`     |
+| `ok_pointers.mt`     | `&`, `*`, pointer-to-pointer                  |
 | `ok_functions.mt`    | function decl/call, recursion, function types |
-| `ok_records.mt`      | struct, field access, recursive `Node*` |
+| `ok_records.mt`      | struct, field access, recursive `Node*`       |
 
 **Rejected with type errors (`err_*`):**
 
-| File | Expected errors |
-|------|-----------------|
-| `err_arith.mt`            | `int + char`; `%` on a double; `int + double` (3 errors) |
-| `err_arrays_pointers.mt`  | index a non-array; non-int index; deref a non-pointer; `&` of an array (4 errors) |
-| `err_calls.mt`            | wrong arity; wrong argument type; call a non-function (3 errors) |
-| `err_stmts.mt`            | redefinition; non-bool `if`; bad assignment; undefined name (4 errors) |
+| File                     | Expected errors                                                                   |
+|--------------------------|-----------------------------------------------------------------------------------|
+| `err_arith.mt`           | `int + char`; `%` on a double; `int + double` (3 errors)                          |
+| `err_arrays_pointers.mt` | index a non-array; non-int index; deref a non-pointer; `&` of an array (4 errors) |
+| `err_calls.mt`           | wrong arity; wrong argument type; call a non-function (3 errors)                  |
+| `err_stmts.mt`           | redefinition; non-bool `if`; bad assignment; undefined name (4 errors)            |
 
 Example output:
 
@@ -260,19 +260,19 @@ Type checking FAILED with 3 type error(s).
 
 ## 8. How this maps to the course (for the defense)
 
-| Course concept | Where it is in this project |
-|----------------|-----------------------------|
-| Pipeline: lexer → parser → semantic analysis | `MiniType.g4` (lexer+parser) → `TypeChecker` |
-| Parser generator | ANTLR4 (`MiniType.g4` → generated lexer/parser/visitor) |
-| SDD: rule `{ … }` computing `.type` | each `visitX` in `TypeChecker.java` returning a `Type` |
-| Synthesized attribute `.type` | the `Type` returned by each visitor method |
-| Symbol table `getType`/`addType` | `SymbolTable.define`/`lookup` |
-| `type_error` sentinel + propagation | `ErrorType` + the `isError()` guards |
-| Type expressions (base + constructors) | `types/` package |
-| Function type `L.type -> T.type` | `FunctionType`, built in `declareFunction` |
-| `Array(T)`, `Pointer(T)` constructors | `ArrayType`, `PointerType` |
-| Structural vs by-name equivalence | `Type.same()` (structural; by-name for records) |
-| Error message + continue (recovery) | `Diagnostics` collects and keeps going |
+| Course concept                               | Where it is in this project                             |
+|----------------------------------------------|---------------------------------------------------------|
+| Pipeline: lexer → parser → semantic analysis | `MiniType.g4` (lexer+parser) → `TypeChecker`            |
+| Parser generator                             | ANTLR4 (`MiniType.g4` → generated lexer/parser/visitor) |
+| SDD: rule `{ … }` computing `.type`          | each `visitX` in `TypeChecker.java` returning a `Type`  |
+| Synthesized attribute `.type`                | the `Type` returned by each visitor method              |
+| Symbol table `getType`/`addType`             | `SymbolTable.define`/`lookup`                           |
+| `type_error` sentinel + propagation          | `ErrorType` + the `isError()` guards                    |
+| Type expressions (base + constructors)       | `types/` package                                        |
+| Function type `L.type -> T.type`             | `FunctionType`, built in `declareFunction`              |
+| `Array(T)`, `Pointer(T)` constructors        | `ArrayType`, `PointerType`                              |
+| Structural vs by-name equivalence            | `Type.same()` (structural; by-name for records)         |
+| Error message + continue (recovery)          | `Diagnostics` collects and keeps going                  |
 
 ---
 
